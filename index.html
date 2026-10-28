@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dealer Evaluation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    select, h1 { margin: 10px 0; display: block; }
+    #result { margin-top: 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Dealer Evaluation</h1>
+  <label>Product</label>
+  <select id="product"><option value="">-- Select product --</option></select>
+  <label>Dealer</label>
+  <select id="dealer"><option value="">-- Select dealer --</option></select>
+  <div id="result"></div>
+
+  <script>
+    const PRODUCT_API = "https://product-details.2ghbpelesji5.us-south.codeengine.appdomain.cloud";
+    const DEALER_API = "https://dealer-pricing.2ghbpelesji5.us-south.codeengine.appdomain.cloud";
+    let prices = [];
+
+    fetch(PRODUCT_API + "/products")
+      .then(r => r.json())
+      .then(list => {
+        const sel = document.getElementById("product");
+        list.forEach(p => sel.add(new Option(p.name, p.id)));
+      });
+
+    document.getElementById("product").addEventListener("change", e => {
+      const dealerSel = document.getElementById("dealer");
+      dealerSel.length = 1;
+      document.getElementById("result").textContent = "";
+      if (!e.target.value) return;
+      fetch(DEALER_API + "/prices/" + e.target.value)
+        .then(r => r.json())
+        .then(list => {
+          prices = list;
+          dealerSel.add(new Option("All Dealers", "all"));
+          list.forEach(d => dealerSel.add(new Option(d.dealer, d.dealer)));
+        });
+    });
+
+    document.getElementById("dealer").addEventListener("change", e => {
+      const out = document.getElementById("result");
+      if (e.target.value === "all") {
+        out.innerHTML = prices.map(d => d.dealer + ": ₹" + d.price).join("<br>");
+      } else {
+        const d = prices.find(x => x.dealer === e.target.value);
+        out.textContent = d ? d.dealer + " offers ₹" + d.price : "";
+      }
+    });
+  </script>
+</body>
+</html>
